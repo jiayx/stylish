@@ -59,14 +59,15 @@ export default function App() {
 				type="button"
 				className="fixed bottom-4 right-4 z-50 bg-sky-500 rounded-full p-2 hover:bg-sky-600 cursor-pointer transition"
 				onClick={() => {
-					setShowModal(!showModal)
+					setCurrentRule(undefined)
+					setShowModal(true)
 				}}
 			>
 				<Plus className="w-6 h-6 text-white cursor-pointer transition hover:rotate-90" />
 			</button>
 
 			<Create
-				defaultRule={currentRule}
+				initialRule={currentRule}
 				open={showModal}
 				onOpenChange={() => setShowModal(!showModal)}
 				onSave={handleRuleCreate}
