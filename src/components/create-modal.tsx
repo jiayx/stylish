@@ -1,6 +1,7 @@
 import { X } from "lucide-react"
-import { useEscape } from "../hooks/use-escape"
-import type { Rule } from "../types/types"
+import { useEscape } from "@/hooks/use-escape"
+import { sendToActiveTab } from "@/lib/messaging"
+import type { Rule } from "@/types/types"
 import RuleForm from "./RuleForm"
 
 export default function Create({
@@ -24,7 +25,12 @@ export default function Create({
   }
 
   // ESC to close
-  useEscape(closeHandler)
+  useEscape(() => {
+    if (open) {
+      closeHandler()
+    }
+    sendToActiveTab({ type: "STOP_PICKER" }).catch(console.error)
+  })
 
   return (
     <div

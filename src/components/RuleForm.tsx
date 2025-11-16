@@ -1,25 +1,36 @@
+import { useForm } from "@tanstack/react-form"
+import { SquareDashedMousePointer } from "lucide-react"
+import { useEffect, useEffectEvent } from "react"
+import z from "zod"
+import { Button } from "@/components/ui/button"
 import {
-  Button,
-  Description,
+  Field,
+  FieldDescription,
   FieldError,
-  Form,
-  Input,
-  Label,
-  TextArea,
-  TextField,
-} from "@heroui/react"
-import { useEffect, useState } from "react"
-import type { Rule } from "../types/types"
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group"
+import { Textarea } from "@/components/ui/textarea"
+import { matchUrl } from "@/lib/match-url"
+import { getCurrentTab, sendToActiveTab } from "@/lib/messaging"
+import type { Rule } from "@/types/types"
 
-const defaultRule: Rule = {
-  id: "",
-  name: "",
-  url: "",
-  selector: "",
-  style: "",
-  enabled: true,
-  createdAt: "",
-}
+const formSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Name is required."),
+  url: z.string().min(1, "URL is required."),
+  selector: z.string().min(1, "Selector is required."),
+  style: z.string(),
+  enabled: z.boolean(),
+  createdAt: z.string(),
+})
 
 export default function RuleForm({
   onSubmit,
@@ -28,147 +39,201 @@ export default function RuleForm({
   onSubmit: (data: Rule) => void
   initialRule?: Rule
 }) {
-  const [rule, setRule] = useState<Rule>(initialRule || defaultRule)
+  const form = useForm({
+    defaultValues: {
+      id: initialRule?.id || "",
+      name: initialRule?.name || "",
+      url: initialRule?.url || "",
+      selector: initialRule?.selector || "",
+      style: initialRule?.style || "",
+      enabled: true,
+      createdAt: initialRule?.createdAt || "",
+    },
+    validators: {
+      onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      // 解构防止修改传入对象的值
+      onSubmit({ ...value })
+    },
+  })
+
+  const resetForm = useEffectEvent(() => {
+    form.reset()
+    getCurrentTab()
+      .then((tab) => {
+        form.setFieldValue("url", tab?.url || "")
+      })
+      .catch(console.error)
+  })
 
   useEffect(() => {
     if (initialRule) {
-      setRule(initialRule)
-    } else {
-      chrome.runtime.sendMessage("GET_ACTIVE_TAB", (response) => {
-        console.log("response", response)
-        if (!response) return
-
-        setRule({
-          ...defaultRule,
-          url: response.url,
-        })
+      // 编辑模式：用当前 rule 填充
+      form.reset({
+        id: initialRule.id || "",
+        name: initialRule.name || "",
+        url: initialRule.url || "",
+        selector: initialRule.selector || "",
+        style: initialRule.style || "",
+        enabled: initialRule.enabled,
+        createdAt: initialRule.createdAt || "",
       })
+    } else {
+      resetForm()
     }
-  }, [initialRule])
+  }, [initialRule, form])
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    const newRule = {
-      ...rule,
-    }
-
-    if (!initialRule) {
-      console.log("create mode")
-      newRule.id = crypto.randomUUID()
-      newRule.createdAt = new Date().toISOString()
-    }
-
-    onSubmit(newRule)
+  const handleSelector = () => {
+    sendToActiveTab({ type: "START_PICKER" }).catch(console.error)
   }
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setRule({
-      ...rule,
-      [e.target.name]: e.target.value,
-    })
-  }
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.type === "ELEMENT_PICKED") {
+      console.log("selector", msg)
 
-  const handleReset = () => {
-    setRule(initialRule || defaultRule)
-  }
+      form.setFieldValue("selector", msg.selector)
+
+      const oldUrl = form.getFieldValue("url")
+      if (!oldUrl || !matchUrl(oldUrl, msg.url)) {
+        form.setFieldValue("url", msg.url)
+      }
+
+      sendResponse(true)
+    }
+  })
 
   return (
-    <Form
-      className="flex flex-col gap-4"
-      onSubmit={handleSubmit}
-      onReset={handleReset}
+    <form
+      id="rule-form"
+      onSubmit={(e) => {
+        e.preventDefault()
+        form.handleSubmit()
+      }}
     >
-      <TextField
-        isRequired
-        name="url"
-        type="text"
-        validate={(value) => {
-          console.log("validate", value)
-          if (!value) {
-            return "Please enter a valid URL"
-          }
-          return null
-        }}
-      >
-        <Label>URL</Label>
-        <Input
-          placeholder="Enter URL"
-          value={rule.url}
-          onChange={handleChange}
-        />
-        <Description>Support regex</Description>
-        <FieldError />
-      </TextField>
-      <TextField
-        isRequired
-        name="selector"
-        type="text"
-        validate={(value) => {
-          if (!value) {
-            return "Please enter a valid selector"
-          }
-          return null
-        }}
-      >
-        <Label>Selector</Label>
-        <Input
-          placeholder="Enter selector"
-          value={rule.selector}
-          onChange={handleChange}
-        />
-        <Button type="button">Get Selector</Button>
-        <FieldError />
-      </TextField>
-      <TextField
-        isRequired
-        name="name"
-        type="text"
-        validate={(value) => {
-          if (!value) {
-            return "Please enter a valid rule name"
-          }
-          return null
-        }}
-      >
-        <Label>Rule Name</Label>
-        <Input
-          placeholder="Enter rule name"
-          value={rule.name}
-          onChange={handleChange}
-        />
-        <FieldError />
-      </TextField>
-      <TextField name="style">
-        <Label>CSS Style</Label>
-        <TextArea
-          placeholder={
-            "color: red;\nfont-size: 20px;\nbackground-color: yellow;"
-          }
-          className="resize-none overflow-hidden"
-          rows={5}
-          value={rule.style}
-          onChange={handleChange}
-          onInput={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-            console.log("input", e.target.value)
-            const target = e.target
-            target.style.height = "auto"
-            target.style.height = `${target.scrollHeight}px`
+      <FieldGroup>
+        <form.Field name="url">
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor={field.name}>URL</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  aria-invalid={isInvalid}
+                  placeholder="Enter URL"
+                  autoComplete="off"
+                />
+                {!field.state.meta.isValid && (
+                  <FieldError errors={field.state.meta.errors} />
+                )}
+                <FieldDescription>Support regex</FieldDescription>
+              </Field>
+            )
           }}
-          onReset={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-            console.log("reset")
-            const target = e.target
-            target.style.height = "auto"
-            target.style.height = `${target.scrollHeight}px`
+        </form.Field>
+        <form.Field name="selector">
+          {(field) => {
+            return (
+              <Field
+                data-invalid={
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                }
+              >
+                <FieldLabel htmlFor={field.name}>Selector</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    aria-invalid={
+                      field.state.meta.isTouched && !field.state.meta.isValid
+                    }
+                    placeholder="Enter selector or select from page"
+                    autoComplete="off"
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton onClick={handleSelector}>
+                      <SquareDashedMousePointer />
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
+            )
           }}
-        />
-        <FieldError />
-      </TextField>
-      <div className="flex gap-2">
-        <Button type="submit">Save</Button>
-      </div>
-    </Form>
+        </form.Field>
+        <form.Field name="name">
+          {(field) => {
+            return (
+              <Field
+                data-invalid={
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                }
+              >
+                <FieldLabel htmlFor={field.name}>Rule Name</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  aria-invalid={
+                    field.state.meta.isTouched && !field.state.meta.isValid
+                  }
+                  placeholder="Enter rule name"
+                  autoComplete="off"
+                />
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
+            )
+          }}
+        </form.Field>
+        <form.Field name="style">
+          {(field) => {
+            return (
+              <Field
+                data-invalid={
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                }
+              >
+                <FieldLabel htmlFor={field.name}>CSS Style</FieldLabel>
+                <Textarea
+                  placeholder={
+                    "color: red;\nfont-size: 20px;\nbackground-color: yellow;"
+                  }
+                  className="resize-none overflow-hidden"
+                  rows={5}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  aria-invalid={
+                    field.state.meta.isTouched && !field.state.meta.isValid
+                  }
+                  autoComplete="off"
+                />
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
+            )
+          }}
+        </form.Field>
+
+        <Field orientation="horizontal">
+          <Button type="submit" form="rule-form">
+            Save
+          </Button>
+          <Button type="button" variant="outline" onClick={resetForm}>
+            reset
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
   )
 }

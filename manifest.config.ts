@@ -13,13 +13,14 @@ export default defineManifest({
       48: "public/logo.png",
     },
   },
-  permissions: ["sidePanel", "contentSettings", "tabs"],
+  permissions: ["sidePanel", "storage", "tabs", "scripting"],
   content_scripts: [
-    // {
-    // 	js: ["src/content/main.tsx"],
-    // 	matches: ["https://*/*"],
-    // },
+    {
+      js: ["src/content/main.ts"],
+      matches: ["*://*/*"],
+    },
   ],
+  host_permissions: ["<all_urls>"],
   side_panel: {
     default_path: "src/sidepanel/index.html",
   },

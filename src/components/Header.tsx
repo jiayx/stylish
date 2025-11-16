@@ -1,19 +1,31 @@
-import { PaintBucket, Settings } from "lucide-react"
+import { PaintBucket, Settings, SunMoon } from "lucide-react"
+import { useTheme } from "@/components/theme-provider"
+import { Button } from "@/components/ui/button"
 
 export default function Header() {
-	return (
-		<header className="sticky top-0 z-10 flex items-center justify-between">
-			<div className="flex items-center gap-2 cursor-pointer">
-				<PaintBucket className="text-sky-400 dark:text-white" />
-				<h1 className="text-lg font-bold leading-tight tracking-tight text-sky-400 dark:text-white">
-					Stylish
-				</h1>
-			</div>
-			<div className="flex items-center gap-2 cursor-pointer transition-colors hover:text-sky-800 dark:hover:text-white-800">
-				<div className="p-2 rounded-full hover:bg-sky-200 dark:hover:bg-sky-800">
-					<Settings className="w-5 h-5 text-sky-400 dark:text-white-500" />
-				</div>
-			</div>
-		</header>
-	)
+  const { theme, setTheme } = useTheme()
+
+  const handleThemeToggle = () => {
+    setTheme(theme === "dark" ? "light" : "dark")
+  }
+
+  return (
+    <header className="flex items-center justify-between">
+      <div className="flex items-center gap-2 cursor-pointer">
+        <PaintBucket className="" />
+        <h1 className="text-lg font-bold leading-tight tracking-tight">
+          Stylish
+        </h1>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="icon" onClick={handleThemeToggle}>
+          <SunMoon />
+        </Button>
+        <Button variant="outline" size="icon">
+          <Settings />
+        </Button>
+      </div>
+    </header>
+  )
 }
