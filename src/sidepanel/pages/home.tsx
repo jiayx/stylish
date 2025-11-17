@@ -1,11 +1,12 @@
 import { Plus } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Create from "@/components/create-modal"
-import Header from "@/components/Header"
-import RuleList from "@/components/RuleList"
+import Header from "@/components/home-header"
+import RuleList from "@/components/rule-list"
 import { Button } from "@/components/ui/button"
 import { useListLocalStorage } from "@/hooks/use-local-storage"
-import { sendToActiveTab } from "@/lib/messaging"
+import { matchUrl } from "@/lib/match-url"
+import { getCurrentTab, sendToActiveTab } from "@/lib/messaging"
 import type { Rule } from "@/types/types"
 
 export default function Home() {
@@ -37,23 +38,59 @@ export default function Home() {
   }
 
   const handleRuleUpdate = (id: string, partial: Partial<Rule>) => {
-    updateItem(id, partial)
-    sendToActiveTab({ type: "RENDER_RULES" })
+    updateItem(id, partial).then(() => {
+      sendToActiveTab({ type: "RENDER_RULES" })
+    })
   }
+
+  const [activeTabUrl, setActiveTabUrl] = useState<string>("")
+  getCurrentTab().then((tab) => setActiveTabUrl(tab?.url || ""))
+
+  const [currentPageRules, setCurrentPageRules] = useState<Rule[]>([])
+  const [otherRules, setOtherRules] = useState<Rule[]>([])
+
+  useEffect(() => {
+    if (!activeTabUrl) return
+    const currentPageRules: Rule[] = []
+    const otherRules: Rule[] = []
+    rules.forEach((rule) => {
+      if (matchUrl(rule.url, activeTabUrl)) {
+        currentPageRules.push(rule)
+      } else {
+        otherRules.push(rule)
+      }
+    })
+    setCurrentPageRules(currentPageRules)
+    setOtherRules(otherRules)
+  }, [activeTabUrl, rules])
+
+  chrome.tabs.onActivated.addListener(({ tabId }) => {
+    chrome.tabs.get(tabId).then((tab) => {
+      setActiveTabUrl(tab.url || "")
+      sendToActiveTab({ type: "RENDER_RULES" })
+    })
+  })
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.type === "ROUTE_CHANGE") {
+      setActiveTabUrl(message.url)
+      sendResponse(true)
+    }
+  })
 
   return (
     <>
-      <div className="sticky top-0 z-10 p-4 border-b backdrop-blur bg-gray-50/70 dark:bg-gray-800/70">
+      <div className="sticky top-0 z-10 p-4 border-b backdrop-blur-xs bg-gray-100/70 dark:bg-black/50">
         <Header />
       </div>
 
       <div className="p-2">
-        <span className="text-xs font-semibold text-gray-600">
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
           RULES FOR THIS PAGE
         </span>
         <div className="mt-2">
           <RuleList
-            rules={rules}
+            rules={currentPageRules}
             onDelete={handleRuleDelete}
             onUpdate={handleRuleUpdate}
             onOpenCreate={(rule) => {
@@ -63,6 +100,25 @@ export default function Home() {
           />
         </div>
       </div>
+
+      <div className="p-2">
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+          OTHER RULES
+        </span>
+        <div className="mt-2">
+          <RuleList
+            rules={otherRules}
+            onDelete={handleRuleDelete}
+            onUpdate={handleRuleUpdate}
+            onOpenCreate={(rule) => {
+              setCurrentRule(rule)
+              setShowModal(true)
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="p-10"></div>
 
       <div className="fixed bottom-4 right-4 z-50 hover:rotate-90 transition">
         <Button
@@ -81,7 +137,7 @@ export default function Home() {
       <Create
         initialRule={currentRule}
         open={showModal}
-        onOpenChange={() => setShowModal(!showModal)}
+        onClose={() => setShowModal(false)}
         onSave={handleRuleSave}
       />
     </>

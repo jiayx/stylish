@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/input-group"
 import { Textarea } from "@/components/ui/textarea"
 import { matchUrl } from "@/lib/match-url"
+import type { Message } from "@/lib/messaging"
 import { getCurrentTab, sendToActiveTab } from "@/lib/messaging"
+import { cn, debounce } from "@/lib/utils"
 import type { Rule } from "@/types/types"
 
 const formSchema = z.object({
@@ -35,9 +37,13 @@ const formSchema = z.object({
 export default function RuleForm({
   onSubmit,
   initialRule,
+  pickerActive,
+  setPickerActive,
 }: {
   onSubmit: (data: Rule) => void
   initialRule?: Rule
+  pickerActive: boolean
+  setPickerActive: (active: boolean) => void
 }) {
   const form = useForm({
     defaultValues: {
@@ -65,6 +71,7 @@ export default function RuleForm({
         form.setFieldValue("url", tab?.url || "")
       })
       .catch(console.error)
+    sendToActiveTab({ type: "REMOVE_RULE", id: "preview" }).catch(console.error)
   })
 
   useEffect(() => {
@@ -85,23 +92,46 @@ export default function RuleForm({
   }, [initialRule, form])
 
   const handleSelector = () => {
-    sendToActiveTab({ type: "START_PICKER" }).catch(console.error)
+    sendToActiveTab({ type: "START_PICKER" })
+      .then(() => {
+        setPickerActive(true)
+      })
+      .catch(console.error)
   }
 
-  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if (msg.type === "ELEMENT_PICKED") {
-      console.log("selector", msg)
-
-      form.setFieldValue("selector", msg.selector)
-
-      const oldUrl = form.getFieldValue("url")
-      if (!oldUrl || !matchUrl(oldUrl, msg.url)) {
-        form.setFieldValue("url", msg.url)
+  const handleChromeMessage = useEffectEvent(
+    (
+      msg: Message,
+      _sender: chrome.runtime.MessageSender,
+      // biome-ignore lint/suspicious/noExplicitAny: any
+      sendResponse: any,
+    ) => {
+      if (msg.type === "ELEMENT_PICKED") {
+        setPickerActive(false)
+        form.setFieldValue("selector", msg.selector)
+        const oldUrl = form.getFieldValue("url")
+        if (!oldUrl || !matchUrl(oldUrl, msg.url)) {
+          form.setFieldValue("url", msg.url)
+        }
+        sendResponse(true)
       }
-
-      sendResponse(true)
+    },
+  )
+  useEffect(() => {
+    chrome.runtime.onMessage.addListener(handleChromeMessage)
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleChromeMessage)
     }
-  })
+  }, [])
+
+  const handleCssPreview = debounce((style: string) => {
+    const selector = form.getFieldValue("selector")
+    if (!selector) return
+    sendToActiveTab({
+      type: "PREVIEW_RULE",
+      rule: { id: "preview", name: "preview", style, selector, enabled: true },
+    })
+  }, 500)
 
   return (
     <form
@@ -132,7 +162,7 @@ export default function RuleForm({
                 {!field.state.meta.isValid && (
                   <FieldError errors={field.state.meta.errors} />
                 )}
-                <FieldDescription>Support regex</FieldDescription>
+                <FieldDescription>Supports the * wildcard</FieldDescription>
               </Field>
             )
           }}
@@ -156,11 +186,17 @@ export default function RuleForm({
                     aria-invalid={
                       field.state.meta.isTouched && !field.state.meta.isValid
                     }
-                    placeholder="Enter selector or select from page"
+                    placeholder="Type or pick with the button ->"
                     autoComplete="off"
                   />
                   <InputGroupAddon align="inline-end">
-                    <InputGroupButton onClick={handleSelector}>
+                    <InputGroupButton
+                      onClick={handleSelector}
+                      className={cn({
+                        "text-green-400": pickerActive,
+                        "hover:text-green-500": pickerActive,
+                      })}
+                    >
                       <SquareDashedMousePointer />
                     </InputGroupButton>
                   </InputGroupAddon>
@@ -206,14 +242,15 @@ export default function RuleForm({
               >
                 <FieldLabel htmlFor={field.name}>CSS Style</FieldLabel>
                 <Textarea
-                  placeholder={
-                    "color: red;\nfont-size: 20px;\nbackground-color: yellow;"
-                  }
+                  placeholder={"font-size: 20px;\nbackground-color: red;"}
                   className="resize-none overflow-hidden"
                   rows={5}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value)
+                    handleCssPreview(e.target.value)
+                  }}
                   aria-invalid={
                     field.state.meta.isTouched && !field.state.meta.isValid
                   }
@@ -226,11 +263,16 @@ export default function RuleForm({
         </form.Field>
 
         <Field orientation="horizontal">
-          <Button type="submit" form="rule-form">
-            Save
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={resetForm}
+            className="flex-1"
+          >
+            Reset
           </Button>
-          <Button type="button" variant="outline" onClick={resetForm}>
-            reset
+          <Button type="submit" form="rule-form" className="flex-1">
+            Save
           </Button>
         </Field>
       </FieldGroup>

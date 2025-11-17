@@ -130,17 +130,21 @@ export function useListLocalStorage<T extends Item>(
 
   const updateItem = useCallback(
     (id: string, partial: Partial<T>) => {
-      setList((prev) => {
-        const next = prev.map((item) =>
-          item.id === id ? { ...item, ...partial } : item,
-        )
-        chrome.storage.local.set({ [storageKey]: next }, () => {
-          const err = chrome.runtime.lastError
-          if (err) {
-            console.warn("Failed to write storage key:", storageKey, err)
-          }
+      return new Promise<T[]>((resolve, reject) => {
+        setList((prev) => {
+          const next = prev.map((item) =>
+            item.id === id ? { ...item, ...partial } : item,
+          )
+          chrome.storage.local.set({ [storageKey]: next }, () => {
+            const err = chrome.runtime.lastError
+            if (err) {
+              reject(new Error(err.message))
+            } else {
+              resolve(next)
+            }
+          })
+          return next
         })
-        return next
       })
     },
     [storageKey],

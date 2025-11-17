@@ -1,8 +1,13 @@
 import "./content-style.css"
 
-import { finder } from "@medv/finder"
 import { sendToRuntime } from "@/lib/messaging"
-import { bootstrapRules, renderRule, renderRules } from "./apply-style"
+import { getCssSelector } from "@/lib/selector"
+import {
+  bootstrapRules,
+  removeRule,
+  renderRule,
+  renderRules,
+} from "./apply-style"
 
 const pickerState: {
   active: boolean
@@ -33,6 +38,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     renderRules()
   } else if (msg.type === "PREVIEW_RULE") {
     renderRule(msg.rule)
+  } else if (msg.type === "REMOVE_RULE") {
+    removeRule(msg.id)
   }
   sendResponse(true)
 })
@@ -54,7 +61,6 @@ function startPicker() {
     document.addEventListener("mousemove", handlePointerMove, true)
     document.addEventListener("mouseout", handlePointerOut, true)
     document.addEventListener("click", handlePickerClick, true)
-    document.addEventListener("keydown", handlePickerKeydown, true)
   }
   pickerState.listenersBound = true
 }
@@ -73,7 +79,6 @@ function stopPicker() {
     document.removeEventListener("mousemove", handlePointerMove, true)
     document.removeEventListener("mouseout", handlePointerOut, true)
     document.removeEventListener("click", handlePickerClick, true)
-    document.removeEventListener("keydown", handlePickerKeydown, true)
     pickerState.listenersBound = false
   }
 }
@@ -123,20 +128,13 @@ function handlePickerClick(event: MouseEvent) {
   if (!pickerState.active) return
   event.preventDefault()
   event.stopPropagation()
-  const selector = finder(event.target as Element)
+  const selector = getCssSelector(event.target as Element)
   sendToRuntime({
     type: "ELEMENT_PICKED",
     selector,
     url: window.location.href,
   }).catch(console.error)
   stopPicker()
-}
-
-function handlePickerKeydown(event: KeyboardEvent) {
-  if (event.key === "Escape") {
-    event.preventDefault()
-    stopPicker()
-  }
 }
 
 function describeElement(el: Element) {

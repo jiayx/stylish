@@ -1,8 +1,9 @@
-import { Pencil, Trash } from "lucide-react"
+import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { Switch } from "@/components/ui/switch"
 import type { Rule } from "@/types/types"
+import RuleDeleteDialog from "./rule-delete-dialog"
 
 export default function RuleCard({
   rule,
@@ -16,13 +17,17 @@ export default function RuleCard({
   onOpenEdit: (rule: Rule) => void
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+    <div className="flex items-center justify-between gap-2">
+      <h2
+        className="text-base text-card-foreground line-clamp-2"
+        title={rule.name}
+      >
         {rule.name}
       </h2>
 
       <div className="flex items-center gap-2">
-        <ButtonGroup>
+        <ButtonGroup onClick={(e) => e.stopPropagation()}>
+          {/* edit */}
           <Button
             variant="outline"
             size="icon"
@@ -30,15 +35,15 @@ export default function RuleCard({
           >
             <Pencil />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onDelete(rule.id)}
-          >
-            <Trash className="text-red-500" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <Switch checked={rule.enabled} onCheckedChange={onToggle} />
+
+          {/* delete dialog */}
+          <RuleDeleteDialog confirmDelete={() => onDelete(rule.id)} />
+
+          {/* switch */}
+          <Button variant="outline" size="icon" asChild>
+            <div>
+              <Switch checked={rule.enabled} onCheckedChange={onToggle} />
+            </div>
           </Button>
         </ButtonGroup>
       </div>

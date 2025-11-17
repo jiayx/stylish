@@ -1,14 +1,16 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: any */
 import contentScriptFile from "@/content/main?script"
 import type { Rule } from "@/types/types"
 
 export type Message =
   | { type: "START_PICKER" }
   | { type: "STOP_PICKER" }
-  | { type: "ELEMENT_PICKED"; selector: string }
+  | { type: "ELEMENT_PICKED"; selector: string; url: string }
   | { type: "RULE_SAVED"; ruleId: string }
-  | { type: "PREVIEW_RULE"; rule: Rule }
+  | { type: "PREVIEW_RULE"; rule: Partial<Rule> }
   | { type: "REMOVE_RULE"; id: string }
   | { type: "RENDER_RULES" }
+  | { type: "ROUTE_CHANGE" }
 
 export type Response<T> = { ok: true; data?: T } | { ok: false; error: string }
 

@@ -1,4 +1,5 @@
 import { matchUrl } from "@/lib/match-url"
+import { sendToRuntime } from "@/lib/messaging"
 import type { Rule } from "@/types/types"
 
 let lastKnownUrl: string | null = null
@@ -33,10 +34,12 @@ function setupNavigationListeners() {
   setInterval(handlePotentialNavigation, 500)
 }
 
+// 触发时机是为当前活跃 tab 的 URL 发生变化
 function handlePotentialNavigation() {
   const currentUrl = window.location.href
   if (currentUrl === lastKnownUrl) return
   lastKnownUrl = currentUrl
+  sendToRuntime({ type: "ROUTE_CHANGE", url: currentUrl }).catch(console.error)
   renderRules()
 }
 
@@ -44,17 +47,15 @@ export async function renderRules() {
   const rules = await listRules()
   rules.forEach((rule) => {
     if (!matchUrl(rule.url, window.location.href)) return
-    if (rule.enabled) {
-      renderRule(rule)
-    } else {
-      removeRule(rule)
-    }
+    renderRule(rule)
   })
 
   const ruleIds = rules
     .filter((rule) => matchUrl(rule.url, window.location.href))
     .map((rule) => `${stylePrefix}${rule.id}`)
-  const elements = document.querySelectorAll(`[id^="${stylePrefix}"]`)
+  ruleIds.push(`${stylePrefix}preview`)
+
+  const elements = document.head.querySelectorAll(`[id^="${stylePrefix}"]`)
   elements.forEach((element) => {
     if (!ruleIds.includes(element.id)) {
       element.remove()
@@ -63,20 +64,21 @@ export async function renderRules() {
 }
 
 export function renderRule(rule: Rule) {
-  const style = document.getElementById(`${stylePrefix}${rule.id}`)
-  if (style) {
-    style.textContent = `/* ${rule.name} */\n${rule.selector} {\n${rule.style}\n}`
+  const element = document.getElementById(`${stylePrefix}${rule.id}`)
+  const style = rule.enabled ? rule.style : ""
+  if (element) {
+    element.textContent = `/* ${rule.name} */\n${rule.selector} {\n${style}\n}`
     return
   } else {
-    const style = document.createElement("style")
-    style.id = `${stylePrefix}${rule.id}`
-    style.textContent = `/* ${rule.name} */\n${rule.selector} {\n${rule.style}\n}`
-    document.head.appendChild(style)
+    const element = document.createElement("style")
+    element.id = `${stylePrefix}${rule.id}`
+    element.textContent = `/* ${rule.name} */\n${rule.selector} {\n${style}\n}`
+    document.head.appendChild(element)
   }
 }
 
-export function removeRule(rule: Rule) {
-  const style = document.getElementById(`${stylePrefix}${rule.id}`)
+export function removeRule(ruleId: string) {
+  const style = document.getElementById(`${stylePrefix}${ruleId}`)
   if (style) {
     style.remove()
   }

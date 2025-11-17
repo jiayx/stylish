@@ -1,4 +1,4 @@
-import { PaintBucket, Settings, SunMoon } from "lucide-react"
+import { PaintBucket, SunMoon } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 
@@ -21,9 +21,6 @@ export default function Header() {
       <div className="flex items-center gap-2">
         <Button variant="outline" size="icon" onClick={handleThemeToggle}>
           <SunMoon />
-        </Button>
-        <Button variant="outline" size="icon">
-          <Settings />
         </Button>
       </div>
     </header>
