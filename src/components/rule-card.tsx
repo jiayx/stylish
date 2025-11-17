@@ -17,13 +17,18 @@ export default function RuleCard({
   onOpenEdit: (rule: Rule) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <h2
-        className="text-base text-card-foreground line-clamp-2"
-        title={rule.name}
-      >
-        {rule.name}
-      </h2>
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col overflow-hidden">
+        <h2
+          className="text-base text-card-foreground line-clamp-2"
+          title={rule.name}
+        >
+          {rule.name}
+        </h2>
+        <p className="text-xs text-muted-foreground truncate" title={rule.url}>
+          {rule.url}
+        </p>
+      </div>
 
       <div className="flex items-center gap-2">
         <ButtonGroup onClick={(e) => e.stopPropagation()}>
