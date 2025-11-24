@@ -39,7 +39,12 @@ function handlePotentialNavigation() {
   const currentUrl = window.location.href
   if (currentUrl === lastKnownUrl) return
   lastKnownUrl = currentUrl
-  sendToRuntime({ type: "ROUTE_CHANGE", url: currentUrl }).catch(console.error)
+  sendToRuntime({ type: "ROUTE_CHANGE", url: currentUrl }).catch((e) => {
+    // if dev mode, log the error; otherwise suppress it to avoid noise
+    if (import.meta.env.DEV) {
+      console.error("Failed to send route change message:", e)
+    }
+  })
   renderRules()
 }
 
