@@ -1,5 +1,3 @@
-import "./content-style.css"
-
 import { sendToRuntime } from "@/lib/messaging"
 import { getCssSelector } from "@/lib/selector"
 import {
@@ -52,12 +50,9 @@ function startPicker() {
   }
 
   pickerState.active = true
-  pickerState.highlight = document.createElement("div")
-  pickerState.highlight.className = "__stylish-picker-highlight"
-  pickerState.label = document.createElement("div")
-  pickerState.label.className = "__stylish-picker-label"
-  pickerState.status = document.createElement("div")
-  pickerState.status.className = "__stylish-picker-status"
+  pickerState.highlight = createHighlightElement()
+  pickerState.label = createLabelElement()
+  pickerState.status = createStatusElement()
   pickerState.status.textContent =
     "Please pick an element. Click to confirm. Press ESC to cancel."
   const mountTarget = document.body || document.documentElement
@@ -161,4 +156,51 @@ function describeElement(el: Element) {
       ? `.${el.className.trim().replace(/\s+/g, ".")}`
       : ""
   return `${tag}${id}${className}`
+}
+
+function createHighlightElement() {
+  const highlight = document.createElement("div")
+  highlight.style.position = "fixed"
+  highlight.style.border = "2px solid #0aa7ff"
+  highlight.style.background = "rgba(10, 167, 255, 0.15)"
+  highlight.style.pointerEvents = "none"
+  highlight.style.zIndex = "2147483646"
+  highlight.style.transition = "all 60ms ease-out"
+  return highlight
+}
+
+function createLabelElement() {
+  const label = document.createElement("div")
+  label.style.position = "fixed"
+  label.style.padding = "2px 6px"
+  label.style.background = "#0aa7ff"
+  label.style.color = "#fff"
+  label.style.fontSize = "12px"
+  label.style.fontFamily =
+    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  label.style.borderRadius = "4px"
+  label.style.pointerEvents = "none"
+  label.style.zIndex = "2147483647"
+  label.style.whiteSpace = "nowrap"
+  label.style.transform = "translate(-50%, -160%)"
+  return label
+}
+
+function createStatusElement() {
+  const status = document.createElement("div")
+  status.style.position = "fixed"
+  status.style.left = "50%"
+  status.style.top = "10px"
+  status.style.transform = "translate(-50%, 0)"
+  status.style.padding = "4px 10px"
+  status.style.background = "rgba(10, 167, 255, 0.6)"
+  status.style.color = "#fff"
+  status.style.fontSize = "16px"
+  status.style.fontFamily =
+    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  status.style.borderRadius = "4px"
+  status.style.pointerEvents = "none"
+  status.style.zIndex = "2147483647"
+  status.style.whiteSpace = "nowrap"
+  return status
 }

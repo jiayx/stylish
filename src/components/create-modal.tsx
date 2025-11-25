@@ -25,6 +25,8 @@ export default function Create({
   const closeHandler = () => {
     onClose()
     sendToActiveTab({ type: "REMOVE_RULE", id: "preview" }).catch(console.error)
+    setPickerActive(false)
+    sendToActiveTab({ type: "STOP_PICKER" }).catch(console.error)
   }
 
   const [pickerActive, setPickerActive] = useState(false)
