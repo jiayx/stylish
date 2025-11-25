@@ -13,12 +13,14 @@ const pickerState: {
   active: boolean
   highlight: HTMLDivElement | null
   label: HTMLDivElement | null
+  status: HTMLDivElement | null
   listenersBound: boolean
   lastTarget: EventTarget | null
 } = {
   active: false,
   highlight: null,
   label: null,
+  status: null,
   listenersBound: false,
   lastTarget: null,
 }
@@ -54,15 +56,23 @@ function startPicker() {
   pickerState.highlight.className = "__stylish-picker-highlight"
   pickerState.label = document.createElement("div")
   pickerState.label.className = "__stylish-picker-label"
+  pickerState.status = document.createElement("div")
+  pickerState.status.className = "__stylish-picker-status"
+  pickerState.status.textContent =
+    "Please pick an element. Click to confirm. Press ESC to cancel."
   const mountTarget = document.body || document.documentElement
-  mountTarget.append(pickerState.highlight, pickerState.label)
+  mountTarget.append(
+    pickerState.highlight,
+    pickerState.label,
+    pickerState.status,
+  )
 
   if (!pickerState.listenersBound) {
     document.addEventListener("mousemove", handlePointerMove, true)
     document.addEventListener("mouseout", handlePointerOut, true)
     document.addEventListener("click", handlePickerClick, true)
+    pickerState.listenersBound = true
   }
-  pickerState.listenersBound = true
 }
 
 function stopPicker() {
@@ -71,8 +81,10 @@ function stopPicker() {
 
   if (pickerState.highlight) pickerState.highlight.remove()
   if (pickerState.label) pickerState.label.remove()
+  if (pickerState.status) pickerState.status.remove()
   pickerState.highlight = null
   pickerState.label = null
+  pickerState.status = null
   pickerState.lastTarget = null
 
   if (pickerState.listenersBound) {
@@ -133,7 +145,11 @@ function handlePickerClick(event: MouseEvent) {
     type: "ELEMENT_PICKED",
     selector,
     url: window.location.href,
-  }).catch(console.error)
+  }).catch((e) => {
+    if (import.meta.env.DEV) {
+      console.error("Failed to send element picked message:", e)
+    }
+  })
   stopPicker()
 }
 
