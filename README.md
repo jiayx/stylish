@@ -1,89 +1,98 @@
 # Stylish
 
-Stylish 是一个面向 Chrome 的网页样式管理工具。你可以为任意域名或路径创建 CSS 规则、即时预览效果，并在侧边面板中统一管理所有站点的样式，让浏览体验完全符合自己的喜好。
+English | [简体中文](README.zh-CN.md)
 
-## 核心特性
+Stylish is a Chrome extension for managing custom website styles. Write CSS for any site, preview the changes instantly, and organize per-domain or per-path rules in the side panel so every page looks exactly the way you want.
 
-- **站点感知的规则列表**：自动按当前 tab 的 URL 将规则分组，随时知道哪些样式作用于正在浏览的页面。
-- **可视化元素选择**：一键调用取色器，鼠标悬停即可高亮元素并生成唯一 CSS Selector。
-- **实时预览**：编辑 CSS 时会向当前页面注入临时规则，确保保存前看到最终样子。
-- **开关 / 排序友好**：每条规则都支持启用、禁用、编辑、删除操作，状态与变更都存储在 `chrome.storage.local` 中。
-- **无侵入式注入**：内容脚本会在匹配 URL 时动态创建 `<style>` 标签，不会修改页面原始 DOM。
+## Chrome Extension Installation & Usage
 
-## 快速开始
+- Chrome Web Store: <https://chromewebstore.google.com/detail/stylish-custom-css-for-an/ilakagpbhjngamjimodcmhndgjjlhien>
+- Click **Add to Chrome**, then open the extension icon to launch the side panel.
+- On any page, press the **+** button in the panel to create a rule, edit the CSS, and use the toggle to enable or disable it.
+- Rules are grouped into **Current page** and **Other pages** for quick discovery and management.
 
-### 环境要求
+## Core Features
+
+- **Site-aware rule list**: Rules are grouped by the active tab URL so you always know which styles apply to the page in view.
+- **Visual element picker**: Launch the picker, hover to highlight elements, and generate precise CSS selectors.
+- **Live preview**: Temporary rules are injected while editing, letting you see the final result before saving.
+- **Switch & sort friendly**: Enable, disable, edit, and delete each rule with states persisted via `chrome.storage.local`.
+- **Non-intrusive injection**: Content scripts dynamically create `<style>` tags for matching URLs without mutating the original DOM.
+
+## Getting Started
+
+### Requirements
 
 - Node.js ≥ 18
-- 推荐使用 `pnpm`（也可以使用 `npm` 或 `yarn`，命令需自行替换）
-- Chrome 116+（支持 Manifest V3 side panel）
+- `pnpm` recommended (replace commands if using `npm` or `yarn`)
+- Chrome 116+ (Manifest V3 side panel support)
 
-### 安装依赖
+### Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-### 本地开发
+### Local Development
 
-1. 启动开发构建：
+1. Start the dev build:
 
    ```bash
    pnpm dev
    ```
 
-2. 在 Chrome 打开 `chrome://extensions`，开启「开发者模式」，点击「加载已解压的扩展程序」，选择项目根目录下的 `dist/`。
-3. 点击扩展图标即可打开侧边面板（首次安装会自动将 action 和 side panel 关联）。
-4. 开发模式会保持监听，保存代码后刷新侧边面板或页面即可看到最新效果。
+2. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the `dist/` folder in the project root.
+3. Click the extension icon to open the side panel (the action and panel are bound automatically on first install).
+4. The dev server watches files; after saving, refresh the panel or page to see the latest changes.
 
-### 打包发布
+### Build for Release
 
 ```bash
 pnpm build
 ```
 
-构建完成后：
+After building:
 
-- 生产版文件输出到 `dist/`，可直接用于「加载已解压的扩展程序」。
-- 额外使用 `vite-plugin-zip-pack` 生成 `release/crx-stylish-<version>.zip`，便于上传到 Chrome Web Store。
+- Production assets land in `dist/` and can be loaded directly via **Load unpacked**.
+- A `release/crx-stylish-<version>.zip` archive is generated for uploading to the Chrome Web Store.
 
-## 使用指南
+## Usage Guide
 
-1. 浏览任意网页并打开扩展的侧边面板。
-2. 点击右下角的 **+** 按钮创建规则：
-   - `URL` 支持通配符 `*`，默认填入当前 Tab 地址。
-   - 点击选择器按钮启动元素拾取器；按 `Esc` 可退出。
-   - 在 `CSS Style` 文本框内书写样式，会自动注入预览。
-3. 保存后，规则会被持久化并立刻生效；可随时通过开关控制是否启用。
-4. 规则按照「当前页面」与「其他页面」分栏展示，方便快速定位。
+1. Visit any webpage and open the side panel.
+2. Click the bottom-right **+** button to add a rule:
+   - `URL` supports the `*` wildcard and defaults to the current tab.
+   - Use the selector button to start the element picker; press `Esc` to exit.
+   - Write styles in the `CSS Style` textarea; rules are injected automatically for preview.
+3. After saving, rules persist and apply immediately. Use toggles to control activation at any time.
+4. Rules are separated by **Current page** and **Other pages** columns for faster targeting.
 
-## 项目结构
+## Project Structure
 
-| 路径                 | 说明                                                         |
-| -------------------- | ------------------------------------------------------------ |
-| `manifest.config.ts` | 使用 CRXJS 生成 Manifest V3 配置。                           |
-| `src/sidepanel/`     | 侧边面板应用，基于 React + TanStack Form 构建。              |
-| `src/components/`    | 通用 UI 组件与业务组件（规则列表、创建弹窗等）。             |
-| `src/content/`       | 内容脚本，负责注入样式、监听路由变化与元素拾取。             |
-| `src/background/`    | Service worker，处理安装后 action 与 side panel 的绑定逻辑。 |
-| `src/lib/`           | URL 匹配、消息通信、CSS Selector 计算等辅助函数。            |
-| `release/`           | 构建后自动生成的 zip 包。                                    |
+| Path                 | Description                                                           |
+| -------------------- | --------------------------------------------------------------------- |
+| `manifest.config.ts` | Generates the Manifest V3 config using CRXJS.                         |
+| `src/sidepanel/`     | Side panel app built with React + TanStack Form.                      |
+| `src/components/`    | Shared UI and domain components (rule list, creation dialog, etc.).   |
+| `src/content/`       | Content scripts that inject styles, watch routing, and run the picker.|
+| `src/background/`    | Service worker that ties the action to the side panel after install.  |
+| `src/lib/`           | Helpers for URL matching, messaging, and CSS selector utilities.      |
+| `release/`           | Auto-generated zip bundles after builds.                              |
 
-## 技术要点
+## Technical Highlights
 
-- **React 19 + TypeScript + Vite 7**：提供现代化前端开发体验，配合 `@crxjs/vite-plugin` 实现 HMR 与 Manifest 生成。
-- **Radix UI + 自定义 UI 组件**：实现一致的表单、按钮、对话框交互。
-- **TanStack React Form + Zod**：管理规则表单状态、实时校验。
-- **chrome.storage + 自定义 Hooks**：`useListLocalStorage` 将 MV3 storage API 封装成 React 状态，并同步多实例的更新。
-- **消息通信**：通过 `chrome.tabs.sendMessage` 与 `chrome.runtime.sendMessage` 让侧边面板、内容脚本、background 三方协同，自动注入缺失的 content script。
-- **路由监听**：内容脚本会劫持 `history.pushState / replaceState` 与 `popstate` 事件，确保 SPA 路由切换后也能重新渲染规则。
+- **React 19 + TypeScript + Vite 7**: Modern stack paired with `@crxjs/vite-plugin` for HMR and manifest generation.
+- **Radix UI + custom components**: Consistent buttons, forms, and dialogs.
+- **TanStack React Form + Zod**: Manage rule-form state with immediate validation feedback.
+- **chrome.storage + custom hooks**: `useListLocalStorage` wraps the MV3 storage API as React state and syncs across instances.
+- **Messaging layer**: `chrome.tabs.sendMessage` and `chrome.runtime.sendMessage` keep the panel, content scripts, and background worker coordinated, auto-injecting missing scripts when needed.
+- **Route listening**: Content scripts hook `history.pushState / replaceState` and `popstate` to re-render rules after SPA navigation.
 
-## 可用脚本
+## Available Scripts
 
-| 命令           | 作用                                                |
-| -------------- | --------------------------------------------------- |
-| `pnpm dev`     | 启动 Vite 开发模式并监听 CRX 构建。                 |
-| `pnpm build`   | 先执行 TypeScript 检查，再生成生产版扩展及 zip 包。 |
-| `pnpm preview` | 预览构建后的静态文件，方便验证。                    |
+| Command        | Purpose                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| `pnpm dev`     | Start Vite in dev mode and watch the CRX build.                  |
+| `pnpm build`   | Run TypeScript checks, build the production bundle, and create zip files. |
+| `pnpm preview` | Preview the built static assets for validation.                  |
 
-至此，你即可在本地调试、定制和发布自己的 Stylish 扩展。如果需要进一步的功能（如规则同步、云备份等），可以在现有存储和通信模块基础上继续扩展。\*\*\*
+You're now ready to debug, customize, and ship your own Stylish extension. For advanced needs (rule syncing, cloud backups, etc.), extend the existing storage and messaging modules.
