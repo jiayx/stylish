@@ -4,6 +4,10 @@
 
 Stylish 是一款用于网页样式管理的 Chrome 扩展，支持在 Chrome 中为任意网站编写自定义 CSS，实时预览效果，并按域名或路径创建规则。在侧边面板中可统一管理所有站点样式，让网页外观完全按个人偏好呈现。
 
+## 演示视频
+
+<video src="https://github.com/user-attachments/assets/88101c66-ce5d-4d59-9e63-3aed749c3ddb" controls></video>
+
 ## Chrome 扩展安装与使用
 
 - Chrome 应用商店地址：<https://chromewebstore.google.com/detail/stylish-custom-css-for-an/ilakagpbhjngamjimodcmhndgjjlhien>
@@ -14,7 +18,7 @@ Stylish 是一款用于网页样式管理的 Chrome 扩展，支持在 Chrome �
 ## 核心特性
 
 - **站点感知的规则列表**：自动按当前 tab 的 URL 将规则分组，随时知道哪些样式作用于正在浏览的页面。
-- **可视化元素选择**：一键调用取色器，鼠标悬停即可高亮元素并生成唯一 CSS Selector。
+- **可视化元素选择**：点击选择器按钮启动元素拾取器，鼠标悬停即可高亮元素，点击鼠标左键自动获取 CSS Selector。
 - **实时预览**：编辑 CSS 时会向当前页面注入临时规则，确保保存前看到最终样子。
 - **开关 / 排序友好**：每条规则都支持启用、禁用、编辑、删除操作，状态与变更都存储在 `chrome.storage.local` 中。
 - **无侵入式注入**：内容脚本会在匹配 URL 时动态创建 `<style>` 标签，不会修改页面原始 DOM。

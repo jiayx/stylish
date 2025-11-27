@@ -4,6 +4,10 @@ English | [简体中文](README.zh-CN.md)
 
 Stylish is a Chrome extension for managing custom website styles. Write CSS for any site, preview the changes instantly, and organize per-domain or per-path rules in the side panel so every page looks exactly the way you want.
 
+## Demo Video
+
+<video src="https://github.com/user-attachments/assets/88101c66-ce5d-4d59-9e63-3aed749c3ddb" controls></video>
+
 ## Chrome Extension Installation & Usage
 
 - Chrome Web Store: <https://chromewebstore.google.com/detail/stylish-custom-css-for-an/ilakagpbhjngamjimodcmhndgjjlhien>
@@ -14,7 +18,7 @@ Stylish is a Chrome extension for managing custom website styles. Write CSS for 
 ## Core Features
 
 - **Site-aware rule list**: Rules are grouped by the active tab URL so you always know which styles apply to the page in view.
-- **Visual element picker**: Launch the picker, hover to highlight elements, and generate precise CSS selectors.
+- **Visual element picker**: Launch the picker, hover to highlight elements, and click to pick CSS selectors.
 - **Live preview**: Temporary rules are injected while editing, letting you see the final result before saving.
 - **Switch & sort friendly**: Enable, disable, edit, and delete each rule with states persisted via `chrome.storage.local`.
 - **Non-intrusive injection**: Content scripts dynamically create `<style>` tags for matching URLs without mutating the original DOM.
@@ -68,15 +72,15 @@ After building:
 
 ## Project Structure
 
-| Path                 | Description                                                           |
-| -------------------- | --------------------------------------------------------------------- |
-| `manifest.config.ts` | Generates the Manifest V3 config using CRXJS.                         |
-| `src/sidepanel/`     | Side panel app built with React + TanStack Form.                      |
-| `src/components/`    | Shared UI and domain components (rule list, creation dialog, etc.).   |
-| `src/content/`       | Content scripts that inject styles, watch routing, and run the picker.|
-| `src/background/`    | Service worker that ties the action to the side panel after install.  |
-| `src/lib/`           | Helpers for URL matching, messaging, and CSS selector utilities.      |
-| `release/`           | Auto-generated zip bundles after builds.                              |
+| Path                 | Description                                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| `manifest.config.ts` | Generates the Manifest V3 config using CRXJS.                          |
+| `src/sidepanel/`     | Side panel app built with React + TanStack Form.                       |
+| `src/components/`    | Shared UI and domain components (rule list, creation dialog, etc.).    |
+| `src/content/`       | Content scripts that inject styles, watch routing, and run the picker. |
+| `src/background/`    | Service worker that ties the action to the side panel after install.   |
+| `src/lib/`           | Helpers for URL matching, messaging, and CSS selector utilities.       |
+| `release/`           | Auto-generated zip bundles after builds.                               |
 
 ## Technical Highlights
 
@@ -89,10 +93,10 @@ After building:
 
 ## Available Scripts
 
-| Command        | Purpose                                                          |
-| -------------- | ---------------------------------------------------------------- |
-| `pnpm dev`     | Start Vite in dev mode and watch the CRX build.                  |
+| Command        | Purpose                                                                   |
+| -------------- | ------------------------------------------------------------------------- |
+| `pnpm dev`     | Start Vite in dev mode and watch the CRX build.                           |
 | `pnpm build`   | Run TypeScript checks, build the production bundle, and create zip files. |
-| `pnpm preview` | Preview the built static assets for validation.                  |
+| `pnpm preview` | Preview the built static assets for validation.                           |
 
 You're now ready to debug, customize, and ship your own Stylish extension. For advanced needs (rule syncing, cloud backups, etc.), extend the existing storage and messaging modules.
